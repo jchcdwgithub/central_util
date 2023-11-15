@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import yaml
 from pycentral.monitoring import Sites
@@ -73,7 +72,7 @@ def main():
                     print(f'looking up site id...')
                     site_id = site_to_id[site]
                 except Exception as e:
-                    print(f"Something went wrong lookinig up site_id. Make sure site is configured on Central. {e}")    
+                    print(f"Something went wrong looking up site_id. Make sure site is configured on Central and site name matches Central site name. {e}")    
                 resp = sites.associate_devices(central,site_id,'IAP',serials)
                 if resp['code'] == 200:
                     print(f'Successfully assigned devices to {site}')
