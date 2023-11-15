@@ -46,12 +46,69 @@ def associate_devices_to_sites(st_to_ser:dict[str,list[str]], central:ArubaCentr
         except Exception as e:
             print(f"Something went wrong looking up site_id. Make sure site is configured on Central and site name matches Central site name. {e}")    
         serials = st_to_ser[site]
-        resp = sites.associate_devices(central,site_id,'IAP',serials)
+        site_payload = {
+            'site_id' : site_id,
+            'device_type' : 'IAP',
+            'device_ids' : serials
+        }
+        resp = central.command(apiMethod="POST",apiPath="/central/v2/sites/associations",apiData=site_payload)
         if resp['code'] == 200:
-            print(f'Successfully assigned devices to {site}')
+            failed = resp['msg']['failed']
+            if len(failed) > 0:
+                print(f"Failed to associate some devices to the site: {failed}")
+            success = resp['msg']['success']
+            if len(success) > 0:
+                print(f'Successfully assigned devices to {site}: {success}')
         else:
             print(f'Something went wrong when trying to assign devices to site: {resp}')
             print('Continuing to next site...')
+
+def update_ap_settings(central:ArubaCentralBase, ap_serial:str, ap_settings:dict) -> dict:
+    '''
+    Update AP setting based on serial number.
+    The ap_settings dictionary has possible keys:
+        hostname: str
+        ip_address: str
+        zonename: str
+        achannel: str
+        atxpower: str
+        gchannel: str
+        gtxpower: str
+        dot11a_radio_disable: bool
+        dot11g_radio_disable: bool
+        usb_port_disable: bool
+    '''
+    path = f'/configuration/v2/ap_settings/{ap_serial}'
+    resp = central.command(apiMethod="POST", apiPath=path, apiData=ap_settings)
+    return resp
+
+def name_devices(device_serials:list[str], device_names:list[str], central:ArubaCentralBase):
+    '''
+    Name the devices a according to the two columns device_serials and device_names. Uses the central connection instance for API calls.
+    '''
+    aps_named = 0
+    total_aps = len(device_names)
+    for device_serial,device_name in zip(device_serials,device_names):
+        ap_settings = {
+            'hostname':device_name,
+            'ip_address': "",
+            'zonename' : '',
+            'achannel' : '',
+            'atxpower' : '',
+            'gchannel' : '',
+            'gtxpower' : '',
+            'dot11a_radio_disable' : False,
+            'dot11g_radio_disable' : False,
+            'usb_port_disable' : False
+        }
+        if device_name != '':
+            print(f'naming ap {device_name}')
+            resp = update_ap_settings(central,device_serial,ap_settings)
+            if not resp['code'] == 200:
+                print(f'Error naming AP {device_name}. {resp}')
+            else:
+                aps_named += 1
+    print(f'renamed {aps_named} out of {total_aps}')
 
 def move_devices_to_group(grp_to_ser:dict[str,list[str]],central:ArubaCentralBase):
     '''
@@ -60,6 +117,7 @@ def move_devices_to_group(grp_to_ser:dict[str,list[str]],central:ArubaCentralBas
     devices = Devices()
     groups = Groups()
     try:
+        print('Retrieving groups from Central...')
         resp = groups.get_groups(central)
         if not resp['code'] == 200:
             raise Exception(f"Error getting groups from Central:{resp}")
@@ -73,6 +131,7 @@ def move_devices_to_group(grp_to_ser:dict[str,list[str]],central:ArubaCentralBas
                 raise Exception(f"Groups {grp} not found in Central. Check name or create group.")
         for grp in grp_to_ser:
             grp_devices = grp_to_ser[grp]
+            print(f'moving devices to group {grp}')
             resp = devices.move_devices(central,grp,grp_devices)
             if not resp['code'] == 200:
                 print(f'Error moving devices to group {grp}. Continuing...')
@@ -167,10 +226,13 @@ def main():
             }
             print('Logging into Central...')
             central = ArubaCentralBase(central_info)
-            if 'site' in df:
-                associate_devices_to_sites(site_to_serials, central)
             if 'group' in df:
                 move_devices_to_group(group_to_serials,central)
+            if 'site' in df:
+                associate_devices_to_sites(site_to_serials, central)
+            if 'name' in df:
+                names = list(df['name'].values)
+                name_devices(serials, names, central)
     except Exception as e:
         print(f'something went wrong: {e}')
 

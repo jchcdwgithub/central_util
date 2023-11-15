@@ -14,9 +14,15 @@ For either the csv or xlsx file, there are three columns that might be defined:
 1. serial
 2. site
 3. group
+4. name
 
 The serial column must be defined and either the site and/or the group columns can be added for each device. If both are defined
-the script will associate the devices to the site(s) and move the devices to the group(s). The data file must be defined in an info.yml
+the script will associate the devices to the site(s) and move the devices to the group(s). 
+
+If the name column exists then the devices will be named/renamed also. Not all devices require a name even if the name column exists.
+Those without a name will be skipped in the naming process.
+
+The data file must be defined in an info.yml
 file that should be in the same directory as the script.
 ```
 ---
