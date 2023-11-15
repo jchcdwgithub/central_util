@@ -27,7 +27,7 @@ def associate_devices_to_sites(st_to_ser:dict[str,list[str]], central:ArubaCentr
         print('retrieving list of sites from Central...')
         sites_resp = sites.get_sites(central)
         if sites_resp['code'] == 200:
-            central_sites = sites_resp['msg']
+            central_sites = sites_resp['msg']['sites']
         else:
             raise Exception(sites_resp)
     except Exception as e:
@@ -38,13 +38,14 @@ def associate_devices_to_sites(st_to_ser:dict[str,list[str]], central:ArubaCentr
     for site in st_to_ser:
         if not site in site_to_id:
             raise Exception(f"Not able to find site {site} in Central. Check name or create site.")
-    for site,serials in st_to_ser:
+    for site in st_to_ser:
         print(f'assigning devices to site {site}')
         try:
             print(f'looking up site id...')
             site_id = site_to_id[site]
         except Exception as e:
             print(f"Something went wrong looking up site_id. Make sure site is configured on Central and site name matches Central site name. {e}")    
+        serials = st_to_ser[site]
         resp = sites.associate_devices(central,site_id,'IAP',serials)
         if resp['code'] == 200:
             print(f'Successfully assigned devices to {site}')
