@@ -1,13 +1,13 @@
 # central_util
 This script reads from a csv or xlsx file and assigns the devices in that file to the sites and/or groups defined in the file.
-##Installation
+## Installation
 Pull the script from github or download it as a zip file:
 `git clone https://github.com/jchcdwgithub/central_util.git`
 
 Run pip to install the libraries from the requirements.txt file:
 `python -m pip install -r requirements.txt`
 
-##Data File Format
+## Data File Format
 For either the csv or xlsx file, there are three columns that might be defined:
 1. serial
 2. site
@@ -21,7 +21,7 @@ file that should be in the same directory as the script.
 data_file: mydata.xlsx
 ```
 
-##Providing Central Credentials
+## Providing Central Credentials
 To interact with the Central API several pieces of information must be provided to the script:
 1. client_id
 2. client_secret
@@ -47,6 +47,6 @@ These five parameters can also be stored as environment variables with the follo
 4. CENTRAL_USERNAME
 5. PASSWORD
 
-##Usage
+## Usage
 After creating the info.yml file and providing the previously mentioned credentials, run the script:
 `python central_util.py`
