@@ -54,18 +54,27 @@ def main():
             print('Logging into Central...')
             central = ArubaCentralBase(central_info)
             sites = Sites()
+            central_sites = ''
+            try:
+                print('retrieving list of sites from Central...')
+                sites_resp = sites.get_sites(central)
+                if sites_resp['code'] == 200:
+                    central_sites = sites_resp['msg']
+                else:
+                    raise Exception(sites_resp)
+            except Exception as e:
+                print(f'Error retrieving sites from Central: {e}')
+            site_to_id = {}
+            for site in central_sites:
+                site_to_id[site['site_name']] = site['site_id']
             for site,serials in site_to_serials:
                 print(f'assigning devices to site {site}')
                 try:
                     print(f'looking up site id...')
-                    site_id_resp = sites.find_site_id(central, site)
-                    if site_id_resp['code'] == 200:
-                        site_id = site_id_resp['data']
-                    else:
-                        raise Exception(site_id_resp)
+                    site_id = site_to_id[site]
                 except Exception as e:
                     print(f"Something went wrong lookinig up site_id. Make sure site is configured on Central. {e}")    
-                resp = sites.associate_devices(central,site_id, 'IAP', serials)
+                resp = sites.associate_devices(central,site_id,'IAP',serials)
                 if resp['code'] == 200:
                     print(f'Successfully assigned devices to {site}')
                 else:
