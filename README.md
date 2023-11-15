@@ -7,6 +7,8 @@ Pull the script from github or download it as a zip file:
 Run pip to install the libraries from the requirements.txt file:
 `python -m pip install -r requirements.txt`
 
+Note that you might need to run python3 and/or pip3 instead.
+
 ## Data File Format
 For either the csv or xlsx file, there are three columns that might be defined:
 1. serial
